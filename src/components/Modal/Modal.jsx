@@ -1,39 +1,31 @@
-import { Component, createRef } from 'react';
-import PropTypes from 'prop-types';
+import { createRef } from "react";
 
-export default class Modal extends Component {
-  backDropRef = createRef();
-  static propTypes = {
-    photo: PropTypes.object,
-  };
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleEscModal);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleEscModal);
-  }
-  handleEscModal = evt => {
-    if (evt.code !== 'Escape') return;
-    this.props.toggleModal();
-  };
+export default function Modal({ photo, toggleModal }) {
+  const backDropRef = createRef();
 
-  handleBackDrop = evt => {
-    const { current } = this.backDropRef;
+  // useEffect(() => {
+  //   window.addEventListener("keydown", (evt) => {
+  //     const { current } = backDropRef;
+  //     if (current && current !== evt.target) return;
+  //     return () => toggleModal();
+  //   });
+  // }, []);
+
+  const handleBackDrop = (evt) => {
+    const { current } = backDropRef;
     if (current && current !== evt.target) return;
-    this.props.toggleModal();
+    toggleModal();
   };
-  render() {
-    const { photo } = this.props;
-    return (
-      <div className="Overlay" onClick={this.handleBackDrop}>
-        <div className="Modal">
-          <img
-            src={photo.largeImageURL}
-            alt={photo.tags}
-            className="modal__img"
-          />
-        </div>
+
+  return (
+    <div className="Overlay" onClick={handleBackDrop}>
+      <div className="Modal">
+        <img
+          src={photo.largeImageURL}
+          alt={photo.tags}
+          className="modal__img"
+        />
       </div>
-    );
-  }
+    </div>
+  );
 }

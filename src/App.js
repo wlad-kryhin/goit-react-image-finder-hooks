@@ -1,98 +1,78 @@
-import './App.css';
-import { Component } from 'react';
-import Searchbar from './components/Searchbar/Searchbar';
-import ImageGallery from './components/ImageGallery/ImageGallery';
-import Button from './components/Button/Button';
-import Loader from 'react-loader-spinner';
-import Modal from './components/Modal/Modal';
-import PropTypes from 'prop-types';
+import "./App.css";
+import { useState, useEffect } from "react";
+import Searchbar from "./components/Searchbar/Searchbar";
+import ImageGallery from "./components/ImageGallery/ImageGallery";
+import Button from "./components/Button/Button";
+import Loader from "react-loader-spinner";
+import Modal from "./components/Modal/Modal";
 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-const KEY = '22313175-89def84c9551dc3c20db3bc15';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+const KEY = "22313175-89def84c9551dc3c20db3bc15";
 
-class App extends Component {
-  state = {
-    imageName: '',
-    images: [],
-    page: 1,
-    isLoading: false,
-    error: '',
-    modalImg: [],
+const App = () => {
+  const [imageName, setImageName] = useState(null);
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [modalImg, setModalImg] = useState([]);
+
+  useEffect(() => {
+    if (imageName === null) return;
+    setIsLoading(true);
+    setError("");
+    fetch(
+      `https://pixabay.com/api/?q=${imageName}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=12`,
+    )
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+
+        return Promise.reject(
+          setError(new Error(`Запрос с именем ${imageName} не найдет `)),
+        );
+      })
+      .then((data) => data.hits)
+      .then((images) => {
+        if (images.length === 0) {
+          return setError("Nothing found, please enter a correct keyword!");
+        }
+        setImages((prevState) => [...prevState, ...images]);
+      })
+      .catch((error) => setError(error))
+      .finally(() => setIsLoading(false));
+  }, [imageName, page]);
+
+  useEffect(() => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [images]);
+
+  const loadMore = () => {
+    setPage(page + 1);
   };
 
-  static propTypes = { onSubmit: PropTypes.func };
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.imageName !== this.state.imageName) {
-      this.setState({ images: [] });
-      this.searchImages();
-    }
-    if (prevState.page !== this.state.page) {
-      this.searchImages();
-    }
-    if (prevState.images !== this.state.images) {
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }
-
-  searchImages = () => {
-    const { imageName, page } = this.state;
-    this.setState({ isLoading: true, error: '' });
-    setTimeout(() => {
-      fetch(
-        `https://pixabay.com/api/?q=${imageName}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=12`,
-      )
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-
-          return Promise.reject(
-            this.setState({
-              error: new Error(`Запрос с именем ${imageName} не найдет `),
-            }),
-          );
-        })
-        .then(data => data.hits)
-        .then(images => {
-          if (images.length === 0) {
-            return this.setState({
-              error: 'Nothing found, please enter a correct keyword!',
-            });
-          }
-          this.setState(prevState => ({
-            images: [...prevState.images, ...images],
-          }));
-        })
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ isLoading: false }));
-    }, 1000);
+  const handleForm = (image) => {
+    setImages([]);
+    setImageName(image);
+    setPage(1);
   };
 
-  loadMore = () => {
-    this.setState({ page: this.state.page + 1 });
+  const toggleModal = () => setIsOpen(!isOpen);
+
+  const findModalImage = (id) => {
+    setModalImg(images.filter((image) => image.id === id));
+    setIsOpen(!isOpen);
   };
 
-  handleForm = image => {
-    this.setState({ imageName: image });
-  };
-
-  toggleModal = () => this.setState({ isOpen: !this.state.isOpen });
-
-  findModalImage = id => {
-    this.setState(prevState => ({
-      modalImg: prevState.images.filter(image => image.id === id),
-      isOpen: !this.state.isOpen,
-    }));
-  };
-
-  toastError = () =>
-    toast.error('Nothing found, please enter a correct keyword!', {
-      position: 'top-right',
+  const toastError = () =>
+    toast.error("Nothing found, please enter a correct keyword!", {
+      position: "top-right",
       autoClose: 5000,
       hideProgressBar: false,
       closeOnClick: true,
@@ -101,45 +81,42 @@ class App extends Component {
       progress: undefined,
     });
 
-  render() {
-    const { images, isLoading, isOpen, modalImg, error } = this.state;
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.handleForm} toast={this.toastError} />
-        {images.length > 0 && (
-          <ImageGallery images={images} find={this.findModalImage} />
-        )}
-        {error && (
-          <ToastContainer
-            position="top-right"
-            autoClose={2500}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            theme={'colored'}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
+  return (
+    <div className="App">
+      <Searchbar onSubmit={handleForm} toast={toastError} />
+      {images.length > 0 && (
+        <ImageGallery images={images} find={findModalImage} />
+      )}
+      {error && (
+        <ToastContainer
+          position="top-right"
+          autoClose={2500}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          theme={"colored"}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      )}
+      {/* {error && <h3 className="error">{error}</h3>} */}
+      {images.length > 10 && <Button onClick={loadMore} />}
+      {isOpen && <Modal photo={modalImg[0]} toggleModal={toggleModal} />}
+      {isLoading && (
+        <div className="loader">
+          <Loader
+            type="Puff"
+            color="#00BFFF"
+            height={100}
+            width={100}
+            timeout={3000} //3 secs
           />
-        )}
-        {/* {error && <h3 className="error">{error}</h3>} */}
-        {images.length > 10 && <Button onClick={this.loadMore} />}
-        {isOpen && <Modal photo={modalImg[0]} toggleModal={this.toggleModal} />}
-        {isLoading && (
-          <div className="loader">
-            <Loader
-              type="Puff"
-              color="#00BFFF"
-              height={100}
-              width={100}
-              timeout={3000} //3 secs
-            />
-          </div>
-        )}
-      </div>
-    );
-  }
-}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default App;

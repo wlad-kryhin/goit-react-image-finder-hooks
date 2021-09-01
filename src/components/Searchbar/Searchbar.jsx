@@ -1,41 +1,39 @@
-import { Component } from 'react';
+import { useState } from "react";
 
-export default class Searchbar extends Component {
-  state = {
-    image: '',
+export default function Searchbar({ onSubmit, toast }) {
+  const [image, setImage] = useState("");
+
+  const handleInputChange = (e) => {
+    setImage(e.currentTarget.value.toLowerCase());
   };
-  handleInputChange = e => {
-    this.setState({ image: e.currentTarget.value.toLowerCase() });
-  };
-  handleFormSubmit = e => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-    if (this.state.image.trim() === '') {
+    if (image.trim() === "") {
       return;
     }
-    this.props.onSubmit(this.state.image);
-    this.setState({ image: '' });
-    this.props.toast();
+    onSubmit(image);
+    setImage("");
+    toast();
   };
-  render() {
-    return (
-      <header className="Searchbar">
-        <form className="SearchForm" onSubmit={this.handleFormSubmit}>
-          <button type="submit" className="SearchForm-button">
-            <span className="SearchForm-button-label">Search</span>
-          </button>
 
-          <input
-            className="SearchForm-input"
-            type="text"
-            value={this.state.image}
-            onChange={this.handleInputChange}
-            placeholder="Search images and photos"
-          />
-        </form>
-        {this.state.image === '' && (
-          <p className="text"> Please, enter something in the search bar</p>
-        )}
-      </header>
-    );
-  }
+  return (
+    <header className="Searchbar">
+      <form className="SearchForm" onSubmit={handleFormSubmit}>
+        <button type="submit" className="SearchForm-button">
+          <span className="SearchForm-button-label">Search</span>
+        </button>
+
+        <input
+          className="SearchForm-input"
+          type="text"
+          value={image}
+          onChange={handleInputChange}
+          placeholder="Search images and photos"
+        />
+      </form>
+      {image === "" && (
+        <p className="text"> Please, enter something in the search bar</p>
+      )}
+    </header>
+  );
 }
