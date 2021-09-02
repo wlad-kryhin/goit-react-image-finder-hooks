@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Searchbar({ onSubmit, toast }) {
+export default function Searchbar({ onSubmit }) {
   const [image, setImage] = useState("");
 
   const handleInputChange = (e) => {
@@ -13,7 +13,6 @@ export default function Searchbar({ onSubmit, toast }) {
     }
     onSubmit(image);
     setImage("");
-    toast();
   };
 
   return (

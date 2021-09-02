@@ -1,21 +1,22 @@
-import { createRef } from "react";
+import { createRef, useEffect } from "react";
 
 export default function Modal({ photo, toggleModal }) {
   const backDropRef = createRef();
-
-  // useEffect(() => {
-  //   window.addEventListener("keydown", (evt) => {
-  //     const { current } = backDropRef;
-  //     if (current && current !== evt.target) return;
-  //     return () => toggleModal();
-  //   });
-  // }, []);
 
   const handleBackDrop = (evt) => {
     const { current } = backDropRef;
     if (current && current !== evt.target) return;
     toggleModal();
   };
+
+  useEffect(() => {
+    const handleEscModal = (evt) => {
+      if (evt.code !== "Escape") return;
+      toggleModal();
+    };
+    window.addEventListener("keydown", handleEscModal);
+    return () => window.removeEventListener("keydown", handleEscModal);
+  }, [toggleModal]);
 
   return (
     <div className="Overlay" onClick={handleBackDrop}>

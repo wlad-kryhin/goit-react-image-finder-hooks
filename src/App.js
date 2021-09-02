@@ -15,35 +15,37 @@ const App = () => {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [modalImg, setModalImg] = useState([]);
 
   useEffect(() => {
     if (imageName === null) return;
     setIsLoading(true);
-    setError("");
-    fetch(
-      `https://pixabay.com/api/?q=${imageName}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=12`,
-    )
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
+    setTimeout(() => {
+      fetch(
+        `https://pixabay.com/api/?q=${imageName}&page=${page}&key=${KEY}&image_type=photo&orientation=horizontal&per_page=12`
+      )
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
 
-        return Promise.reject(
-          setError(new Error(`Запрос с именем ${imageName} не найдет `)),
-        );
-      })
-      .then((data) => data.hits)
-      .then((images) => {
-        if (images.length === 0) {
-          return setError("Nothing found, please enter a correct keyword!");
-        }
-        setImages((prevState) => [...prevState, ...images]);
-      })
-      .catch((error) => setError(error))
-      .finally(() => setIsLoading(false));
+          return Promise.reject(
+            new Error(`Запрос с именем ${imageName} не найден `)
+          );
+        })
+        .then((data) => data.hits)
+        .then((images) => {
+          if (images.length === 0) {
+            return toast.error(
+              "Nothing found, please enter a correct keyword!"
+            );
+          }
+          setImages((prevState) => [...prevState, ...images]);
+        })
+        .catch((error) => toast.error(error.message))
+        .finally(() => setIsLoading(false));
+    }, 1000);
   }, [imageName, page]);
 
   useEffect(() => {
@@ -70,36 +72,11 @@ const App = () => {
     setIsOpen(!isOpen);
   };
 
-  const toastError = () =>
-    toast.error("Nothing found, please enter a correct keyword!", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-
   return (
     <div className="App">
-      <Searchbar onSubmit={handleForm} toast={toastError} />
+      <Searchbar onSubmit={handleForm} />
       {images.length > 0 && (
         <ImageGallery images={images} find={findModalImage} />
-      )}
-      {error && (
-        <ToastContainer
-          position="top-right"
-          autoClose={2500}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          theme={"colored"}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
       )}
       {/* {error && <h3 className="error">{error}</h3>} */}
       {images.length > 10 && <Button onClick={loadMore} />}
@@ -115,6 +92,18 @@ const App = () => {
           />
         </div>
       )}
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        theme={"colored"}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };
